@@ -46,6 +46,7 @@ NODE *pnext;
 
 void lst_print(LIST *l) {
 NODE *p = l->front;
+
   printf("[");
   while(p != NULL) {
     printf(FORMAT, p->val);
@@ -108,6 +109,7 @@ NODE *p = malloc(sizeof(NODE));
   p->val = val;
   p->next = l->front;
   l->list_length++;
+  // printf("List length is now: %i\n", l->list_length);
   l->front = p;
   if(l->back == NULL)   // was empty, now one elem
       l->back = p;
@@ -124,6 +126,7 @@ NODE *p;
 	p->next = NULL;
 	l->back->next = p;
   l->list_length++;
+  // printf("List length is now: %i\n", l->list_length);
 	l->back = p;  
   }
 }
@@ -251,6 +254,7 @@ ElemType lst_pop_front(LIST *l) {
 	free(p);
   }
   l->list_length--;
+  // printf("List length is now: %i\n", l->list_length);
   return ret;
 }
 
@@ -286,12 +290,13 @@ ElemType lst_pop_back(LIST *l) {
       temp = p; //holds previous node while iterating
       p = p->next;
     }
+    ret = p->val;
     free(p);
     temp->next = NULL;
     l->back = temp;
-    ret = temp->val;
   }
   l->list_length--;
+  // printf("List length is now: %i\n", l->list_length);
   return ret;
 } 
 
@@ -438,15 +443,19 @@ NODE *p = l->front;
 void lst_insert_sorted(LIST *l, ElemType x) {
   NODE* cur = l->front;
   NODE* prev = NULL;
-  // if (!lst_is_sorted(l)){
-  //   return;
-  // }
-  if (cur == NULL) {
+  int i = 0;
+  if (cur == NULL || cur->val > x) {
     lst_push_front(l, x);
+    return;
   }
-  while (cur->val < x && cur->next != NULL) {
+  if (l->back->val < x) {
+    lst_push_back(l, x);
+    return;
+  }
+  while (cur->val < x && cur != NULL) {
     prev = cur;
     cur = cur->next;
+    i++;
   }
   NODE* new = malloc(sizeof(NODE));
   new->val = x;
@@ -488,7 +497,61 @@ void lst_insert_sorted(LIST *l, ElemType x) {
  * 	the total number of elements being processed.
  */
 void lst_merge_sorted(LIST *a, LIST *b){
+  NODE* pointer_a = a->front;
+  NODE* pointer_b = b->front;
+  NODE* temp;
+  int length_a = lst_length(a);
+  int length_b = lst_length(b);
+  int i = 0;
+  int j = 0;
+  a->list_length = length_a+length_b;
+  b->front = NULL;
+  b->back = NULL;
+  b->list_length = 0;
+  if (length_b == 0) {
+    return;
+  }
+  if (length_a == 0) {
+    a->front = b->front;
+    a->back = b->back;
+    a->list_length = b->list_length;
+    return;
+  }
+  if (pointer_a->val < pointer_b->val) {
+    temp = pointer_a;
+    pointer_a = pointer_a->next;
+    temp->next = pointer_b;
+    pointer_b = pointer_b->next;
+  } else {
+    temp = pointer_b;
+    a->front = temp;
+    pointer_b = pointer_b->next;
+    temp->next = pointer_a;
+    pointer_a = pointer_a->next;
+  }
+  i++;
+  j++;
+  temp = temp->next;
+  while ( i < length_a && j < length_b) {
+    // printf("Vals compared\n a: %i b:%i\n", pointer_a->val, pointer_b->val);
+    if (pointer_a->val < pointer_b->val) {
+      temp->next = pointer_a;
+      pointer_a = pointer_a->next;
+      i++;
+    } else {
+      temp->next = pointer_b;
+      pointer_b = pointer_b->next;
 
+      j++;
+    }
+    temp = temp->next;
+  }
+  if (pointer_a == NULL) {
+    temp->next = pointer_b;
+    a->back = pointer_b;
+  } else {
+    temp->next = pointer_a;
+  }
 }
 
 /**
@@ -501,7 +564,11 @@ void lst_merge_sorted(LIST *a, LIST *b){
 */
 LIST * lst_clone(LIST *a) {
   LIST * l = lst_create();
+
   NODE * cur = a->front;
+  if (a->list_length == 0) {
+    return l;
+  }
   while (cur != NULL) {
     lst_push_back(l, cur->val);
     cur = cur->next;
@@ -526,9 +593,11 @@ LIST * lst_clone(LIST *a) {
 * runtime requirement:  THETA(n)
 */
 LIST * lst_from_array(ElemType a[], int n){
-
-  return NULL;
-
+  LIST * lst = lst_create();
+  for (int i = 0; i<n; i++) {
+    lst_push_back(lst, a[i]);
+  } 
+  return lst;
 }
 
 
@@ -545,6 +614,7 @@ LIST * lst_from_array(ElemType a[], int n){
 *
 */
 ElemType * lst_to_array(LIST *lst) {
+
   ElemType * newarray = malloc(lst_length(lst)*sizeof(ElemType));
   NODE* cur = lst->front;
   int i = 0;
@@ -611,8 +681,23 @@ ElemType * lst_to_array(LIST *lst) {
 */
 LIST * lst_prefix(LIST *lst, unsigned int k) {
 
-  return NULL;
-
+  LIST * newlst = lst_create();
+  NODE* temp = lst->front;
+  if (lst_length(lst) == 0 || k == 0) {
+    return newlst;
+  }
+  newlst->front = temp;
+  newlst->list_length = k;
+  lst->list_length = lst_length(lst)-k;
+  for (int i = 0; i<k; i++) {
+    newlst->back = temp;
+    temp = temp->next;
+    lst->front = temp;
+  }
+  // printf("%i", newlst->back->next->val);
+  temp = newlst->back;
+  temp->next = NULL;
+  return newlst;
 }
 
 
@@ -658,15 +743,32 @@ LIST * lst_prefix(LIST *lst, unsigned int k) {
 *			
 */
 LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
-
   LIST * filteredlist = lst_create();
+  if (lst_length(lst) == 0) {
+    return filteredlist;
+  }
   int first = 0;
+  int firstfiltered = 0;
   NODE* cur = lst->front;
   NODE* temp;
   NODE* listtrack;
+  NODE* filteredtrack;
+
+  if (lst_length(lst) == 1) {
+    if (cur->val <= cutoff) {
+      lst->front = NULL;
+      lst->back = NULL;
+      lst->list_length--;
+      listtrack = cur;
+      filteredlist->front = listtrack;
+      filteredlist->back = listtrack;
+    }
+    return filteredlist;
+  }
+
   while (cur != NULL) {
     temp = cur;
-    if (cur->val > cutoff) {
+    if (cur->val <= cutoff) {
       if (first == 0) {
         listtrack = cur;
         filteredlist->front = listtrack;
@@ -675,16 +777,26 @@ LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
         listtrack->next = cur;
         listtrack = listtrack->next;
       }
-      cur = cur->next;
+      lst->list_length--;
+      filteredlist->list_length++;
     } else {
-      cur = cur->next;
-      free(temp);
+      if (firstfiltered == 0) {
+        filteredtrack = cur;
+        lst->front = filteredtrack;
+        firstfiltered = 1;
+      } else {
+        filteredtrack->next = cur;
+        filteredtrack = filteredtrack->next;
+      }
     }
+    cur = cur->next;
   }
+  
+  filteredtrack->next = NULL;
+  lst->back = filteredtrack;
   listtrack->next = NULL;
   filteredlist->back = listtrack;
   return filteredlist;
-
 }
 
 /**
@@ -728,5 +840,25 @@ LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
 *	
 */
 void lst_concat(LIST *a, LIST *b) {
-
+  if (a == b) {
+    return;
+  }
+  if (lst_length(a) == 0 && lst_length(b) == 0) {
+    return;
+  }
+  if (lst_length(a) == 0) {
+    a->front = b->front;
+    a->back = b->back;
+     a->list_length = lst_length(b);
+    b->front = NULL;
+    b->back = NULL;
+    b->list_length = 0;
+  }
+  a->back->next = b->front;
+  a->back = b->back;
+  a->list_length = lst_length(a)+lst_length(b);
+  b->front = NULL;
+  b->back = NULL;
+  b->list_length = 0;
 }
+

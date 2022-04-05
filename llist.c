@@ -505,9 +505,6 @@ void lst_merge_sorted(LIST *a, LIST *b){
   int i = 0;
   int j = 0;
   a->list_length = length_a+length_b;
-  b->front = NULL;
-  b->back = NULL;
-  b->list_length = 0;
   if (length_b == 0) {
     return;
   }
@@ -515,8 +512,14 @@ void lst_merge_sorted(LIST *a, LIST *b){
     a->front = b->front;
     a->back = b->back;
     a->list_length = b->list_length;
+    b->front = NULL;
+    b->back = NULL;
+    b->list_length = 0;
     return;
   }
+  b->front = NULL;
+  b->back = NULL;
+  b->list_length = 0;
   if (pointer_a->val < pointer_b->val) {
     temp = pointer_a;
     pointer_a = pointer_a->next;
@@ -861,4 +864,3 @@ void lst_concat(LIST *a, LIST *b) {
   b->back = NULL;
   b->list_length = 0;
 }
-

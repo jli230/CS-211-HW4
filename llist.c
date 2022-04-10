@@ -406,13 +406,37 @@ int k=n/2;
 *   iteratieve.
 **/
 int lst_remove_all_fast(LIST *l, ElemType x) {
+  printf("removing fast\n");
   NODE* cur = l->front;
+  int n = 0;
+  int del = 0;
+  NODE* temp = NULL;
+  NODE* prev = cur;
   while (cur != NULL) {
+    printf("test\n");
     if (cur->val == x) {
-
+      temp = cur;
+    } else {
+      prev = cur;
     }
+    cur = cur->next;
+    if(temp != NULL) {
+      printf("Removing\n");
+      printf("Prev: %i\n", prev->val);
+      printf("n: %i\n", n);
+      printf("temp: %i\n", temp->val);
+      if (n == 0) {
+        l->front = cur;
+      }
+      del++;
+      free(temp);
+      temp = NULL;
+      prev->next = cur;
+    }
+    n++;
   }
-  return 0;
+  l->list_length = n-del;
+  return del;
 }
 
 int lst_is_sorted(LIST *l){

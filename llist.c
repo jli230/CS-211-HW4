@@ -47,7 +47,12 @@ NODE *pnext;
 void lst_print(LIST *l) {
 NODE *p = l->front;
 
-  printf("[");
+  
+	
+	
+	
+	
+	("[");
   while(p != NULL) {
     printf(FORMAT, p->val);
     p = p->next;
@@ -406,14 +411,12 @@ int k=n/2;
 *   iteratieve.
 **/
 int lst_remove_all_fast(LIST *l, ElemType x) {
-  printf("removing fast\n");
   NODE* cur = l->front;
   int n = 0;
   int del = 0;
   NODE* temp = NULL;
   NODE* prev = cur;
   while (cur != NULL) {
-    printf("test\n");
     if (cur->val == x) {
       temp = cur;
     } else {
@@ -421,10 +424,7 @@ int lst_remove_all_fast(LIST *l, ElemType x) {
     }
     cur = cur->next;
     if(temp != NULL) {
-      printf("Removing\n");
-      printf("Prev: %i\n", prev->val);
-      printf("n: %i\n", n);
-      printf("temp: %i\n", temp->val);
+
       if (n == 0) {
         l->front = cur;
       }

@@ -444,6 +444,7 @@ void lst_insert_sorted(LIST *l, ElemType x) {
   NODE* cur = l->front;
   NODE* prev = NULL;
   int i = 0;
+  l->list_length++;
   if (cur == NULL || cur->val > x) {
     lst_push_front(l, x);
     return;
@@ -753,7 +754,6 @@ LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
   int first = 0;
   int firstfiltered = 0;
   NODE* cur = lst->front;
-  NODE* temp;
   NODE* listtrack;
   NODE* filteredtrack;
 
@@ -770,7 +770,6 @@ LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
   }
 
   while (cur != NULL) {
-    temp = cur;
     if (cur->val <= cutoff) {
       if (first == 0) {
         listtrack = cur;
@@ -844,6 +843,7 @@ LIST * lst_filter_leq(LIST *lst, ElemType cutoff) {
 */
 void lst_concat(LIST *a, LIST *b) {
   if (a == b) {
+    fprintf(stderr, "Cannot concatenate a list with itself!\n");
     return;
   }
   if (lst_length(a) == 0 && lst_length(b) == 0) {
@@ -852,10 +852,11 @@ void lst_concat(LIST *a, LIST *b) {
   if (lst_length(a) == 0) {
     a->front = b->front;
     a->back = b->back;
-     a->list_length = lst_length(b);
+    a->list_length = lst_length(b);
     b->front = NULL;
     b->back = NULL;
     b->list_length = 0;
+    return;
   }
   a->back->next = b->front;
   a->back = b->back;
